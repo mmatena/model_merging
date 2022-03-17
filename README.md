@@ -42,3 +42,50 @@ Here are the parameters this script takes:
 - `--favor_target_model` Whether to default to the first model's parameter value when all Fisher values are below the Fisher floor.
 - `--normalize_fishers` Whether to normalize the Fishers so that each of them has an L2 norm of 1.
 
+## Examples
+
+### Isometric merge
+This example command isometrically merges two RoBERTa models finetuned on RTE and MNLI and evaluates the merged models on RTE.
+
+```bash
+EVAL_TASK=rte
+RTE_MODEL=textattack/roberta-base-RTE
+MNLI_MODEL=textattack/roberta-base-MNLI
+
+# Isometric merge.
+python3 ./scripts/merge_and_evaluate.py  \
+    --models=$RTE_MODEL,$MNLI_MODEL \
+    --glue_task=$EVAL_TASK
+```
+
+### Fisher merge
+These example commands first compute the Fishers of two RoBERTa models finetuned on RTE and MNLI.
+Then the Fishers are used to Fisher merge the two models.
+
+```bash
+EVAL_TASK=rte
+RTE_MODEL=textattack/roberta-base-RTE
+MNLI_MODEL=textattack/roberta-base-MNLI
+FISHER_DIR=/path/to/directory/containing/fishers
+
+# Compute RTE Fisher.
+python3 ./scripts/compute_fisher.py  \
+    --model=$RTE_MODEL \
+    --glue_task="rte" \
+    --fisher_path="$FISHER_DIR/rte_fisher.h5"
+    
+# Compute MNLI Fisher.
+python3 ./scripts/compute_fisher.py  \
+    --model=$MNLI_MODEL \
+    --glue_task="mnli" \
+    --fisher_path="$FISHER_DIR/mnli_fisher.h5"
+
+# Fisher merge
+python3 ./scripts/merge_and_evaluate.py  \
+    --models=$RTE_MODEL,$MNLI_MODEL \
+    --fishers=$FISHER_DIR/rte_fisher.h5,$FISHER_DIR/mnli_fisher.h5 \
+    --glue_task=$EVAL_TASK
+```
+
+
+
